@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OSHA Enforcement Search</title>
+  <meta name="description" content="Search OSHA establishments, inspections, violations, and accidents using the U.S. Department of Labor OSHA enforcement API.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div>
+        <h1>OSHA Enforcement Search</h1>
+        <p class="sub">Establishments, inspections, violations, and accidents, served live from the U.S. Department of Labor OSHA enforcement API.</p>
+      </div>
+      <button id="settings-toggle" class="btn ghost" aria-expanded="false" aria-controls="settings">API settings</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="settings" class="panel settings" hidden>
+      <h2>API connection</h2>
+      <p class="hint">
+        Data comes only from the DOL Open Data Portal OSHA datasets (<code>apiprod.dol.gov/v4</code>).
+        You need a free API key from <a href="https://dataportal.dol.gov/" target="_blank" rel="noopener">dataportal.dol.gov</a>.
+        The key is kept in this browser only.
+      </p>
+      <form id="settings-form" class="grid">
+        <label>API key
+          <input id="api-key" type="password" autocomplete="off" placeholder="Your DOL API key">
+        </label>
+        <label>Connection
+          <select id="api-mode">
+            <option value="direct">Direct to apiprod.dol.gov</option>
+            <option value="proxy">Local proxy (/api, run server.js)</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button class="btn" type="submit">Save</button>
+          <button class="btn ghost" type="button" id="test-conn">Test connection</button>
+        </div>
+      </form>
+      <p id="settings-status" class="status" role="status"></p>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab" data-tab="establishments" aria-selected="true">Establishments</button>
+      <button role="tab" class="tab" data-tab="inspections" aria-selected="false">Inspections</button>
+      <button role="tab" class="tab" data-tab="violations" aria-selected="false">Violations</button>
+      <button role="tab" class="tab" data-tab="accidents" aria-selected="false">Accidents</button>
+    </nav>
+
+    <!-- Establishments -->
+    <section class="panel tabpanel" id="tab-establishments">
+      <p class="hint">Finds establishments by name and location from OSHA inspection records, grouped into one entry per site.</p>
+      <form class="grid search-form" data-search="establishments">
+        <label>Establishment name <input name="estab_name" placeholder="e.g. ACME CONSTRUCTION" required></label>
+        <label>City <input name="site_city"></label>
+        <label>State <input name="site_state" maxlength="2" placeholder="TX"></label>
+        <label>ZIP <input name="site_zip" maxlength="5"></label>
+        <div class="actions"><button class="btn" type="submit">Search establishments</button></div>
+      </form>
+    </section>
+
+    <!-- Inspections -->
+    <section class="panel tabpanel" id="tab-inspections" hidden>
+      <form class="grid search-form" data-search="inspections">
+        <label>Establishment name <input name="estab_name"></label>
+        <label>Activity number <input name="activity_nr" inputmode="numeric"></label>
+        <label>City <input name="site_city"></label>
+        <label>State <input name="site_state" maxlength="2"></label>
+        <label>ZIP <input name="site_zip" maxlength="5"></label>
+        <label>NAICS code <input name="naics_code" inputmode="numeric"></label>
+        <label>Inspection type
+          <select name="insp_type">
+            <option value="">Any</option>
+          </select>
+        </label>
+        <label>Opened on/after <input name="open_from" type="date"></label>
+        <label>Opened on/before <input name="open_to" type="date"></label>
+        <div class="actions"><button class="btn" type="submit">Search inspections</button></div>
+      </form>
+    </section>
+
+    <!-- Violations -->
+    <section class="panel tabpanel" id="tab-violations" hidden>
+      <form class="grid search-form" data-search="violations">
+        <label>Inspection activity number <input name="activity_nr" inputmode="numeric"></label>
+        <label>Standard cited <input name="standard" placeholder="e.g. 19260501"></label>
+        <label>Violation type
+          <select name="viol_type">
+            <option value="">Any</option>
+          </select>
+        </label>
+        <label>Min. current penalty ($) <input name="min_penalty" type="number" min="0"></label>
+        <label>Issued on/after <input name="issued_from" type="date"></label>
+        <label>Issued on/before <input name="issued_to" type="date"></label>
+        <div class="actions"><button class="btn" type="submit">Search violations</button></div>
+      </form>
+    </section>
+
+    <!-- Accidents -->
+    <section class="panel tabpanel" id="tab-accidents" hidden>
+      <form class="grid search-form" data-search="accidents">
+        <label>Summary number <input name="summary_nr" inputmode="numeric"></label>
+        <label>Keyword in description <input name="event_desc" placeholder="e.g. FALL"></label>
+        <label>Fatalities
+          <select name="fatality">
+            <option value="">Any</option>
+            <option value="X">Fatal only</option>
+          </select>
+        </label>
+        <label>Event on/after <input name="event_from" type="date"></label>
+        <label>Event on/before <input name="event_to" type="date"></label>
+        <div class="actions"><button class="btn" type="submit">Search accidents</button></div>
+      </form>
+    </section>
+
+    <section id="results" class="results" aria-live="polite"></section>
+  </main>
+
+  <dialog id="detail">
+    <div class="detail-head">
+      <h2 id="detail-title">Details</h2>
+      <button class="btn ghost" id="detail-close" aria-label="Close">Close</button>
+    </div>
+    <div id="detail-body"></div>
+  </dialog>
+
+  <footer class="wrap foot">
+    Source: U.S. Department of Labor, Occupational Safety and Health Administration enforcement data, via the DOL Open Data Portal API.
+    This site shows OSHA data only and is not affiliated with DOL or OSHA.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
